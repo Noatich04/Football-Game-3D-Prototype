@@ -78,7 +78,7 @@ if(!p.keeper&&Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.posi
 }}
 function updateBall(dt){ball.position.x+=bvx*dt;ball.position.z+=bvz*dt;bvx*=Math.pow(.985,dt*60);bvz*=Math.pow(.985,dt*60);if(ball.position.y>.42){ball.position.y-=dt*4.5;if(ball.position.y<.42)ball.position.y=.42}
 if(Math.abs(ball.position.x)>W/2-.5){ball.position.x=Math.sign(ball.position.x)*(W/2-.5);bvx*=-.65}
-if(Math.abs(ball.position.z)>L/2){if(Math.abs(ball.position.x)<4.1){goalScored(ball.position.z<0?'red':'blue')}else{ball.position.z=Math.sign(ball.position.z)*(L/2-.5);bvz*=-.65}}
+if(Math.abs(ball.position.z)>L/2){if(Math.abs(ball.position.x)<4.1){goalScored(ball.position.z<0?'blue':'red')}else{ball.position.z=Math.sign(ball.position.z)*(L/2-.5);bvz*=-.65}}
 for(const p of players){const dx=ball.position.x-p.g.position.x,dz=ball.position.z-p.g.position.z,d=Math.hypot(dx,dz);if(d<.9&&ball.position.y<1.5){const nx=dx/(d||1),nz=dz/(d||1);ball.position.x=p.g.position.x+nx*.91;ball.position.z=p.g.position.z+nz*.91;const v=bvx*nx+bvz*nz;if(v<2){bvx+=nx*(2-v);bvz+=nz*(2-v)}if(p.keeper){bvx=nx*8+(Math.random()-.5)*3;bvz=nz*8}}}
 ball.rotation.x+=bvz*dt*1.5;ball.rotation.z-=bvx*dt*1.5}
 function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.04);last=now;if(started&&!paused){gameTime+=dt;if(shooting)shotPower=Math.min(1,shotPower+dt*.72);updatePlayers(dt);updateBall(dt);clockEl.textContent=String(Math.floor(gameTime/60)).padStart(2,'0')+':'+String(Math.floor(gameTime%60)).padStart(2,'0');if(goalFlash>0){goalFlash-=dt;if(goalFlash<=0)toastEl.textContent=''} }

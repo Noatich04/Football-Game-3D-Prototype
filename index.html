@@ -58,13 +58,13 @@ const keys={};addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','Arro
 document.querySelector('#start').onclick=()=>{started=true;overlay.style.display='none';last=performance.now();toastEl.textContent='BẮT ĐẦU!';setTimeout(()=>toastEl.textContent='',1100)};
 function changePlayer(){const team=players.filter(p=>p.team==='blue'&&!p.keeper);controlled=team.reduce((a,b)=>dist2(b.g.position,ball.position)<dist2(a.g.position,ball.position)?b:a);statusEl.textContent='Đang điều khiển số '+controlled.num}
 function dist2(a,b){return (a.x-b.x)**2+(a.z-b.z)**2}
-let bvx=0,bvz=0;
+let bvx=0,bvz=0,possessor=null;
 function kick(power){const p=controlled,dx=ball.position.x-p.g.position.x,dz=ball.position.z-p.g.position.z;if(Math.hypot(dx,dz)>2.7){statusEl.textContent='Hãy áp sát bóng để sút';return}
 let targetX=0,targetZ=p.team==='blue'?-L/2:L/2;
 const goalX=targetX-p.g.position.x,goalZ=targetZ-p.g.position.z,len=Math.hypot(goalX,goalZ)||1;
-const strength=8+power*23;bvx=goalX/len*strength+(Math.random()-.5)*power*2.2;bvz=goalZ/len*strength;ball.position.y=.5+power*1.4;statusEl.textContent=power>.65?'Sút căng!':'Sút bóng!'}
-function passBall(){const p=controlled;if(Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z)>2.8){statusEl.textContent='Hãy áp sát bóng để chuyền';return}const mates=players.filter(q=>q.team===p.team&&!q.keeper&&q!==p).sort((a,b)=>dist2(a.g.position,ball.position)-dist2(b.g.position,ball.position));let m=mates.find(q=>p.team==='blue'?q.g.position.z<p.g.position.z:q.g.position.z>p.g.position.z)||mates[0];const dx=m.g.position.x-ball.position.x,dz=m.g.position.z-ball.position.z,len=Math.hypot(dx,dz)||1;bvx=dx/len*13;bvz=dz/len*13;ball.position.y=.5;statusEl.textContent='Chuyền cho đồng đội'}
-function goalScored(team){if(team==='blue')blueScore++;else redScore++;scoreEl.textContent=blueScore+' - '+redScore;toastEl.textContent=team==='blue'?'VÀOOOO! BLUE GHI BÀN':'RED GHI BÀN!';goalFlash=2.2;statusEl.textContent='Bàn thắng! Trận đấu tiếp tục';setTimeout(()=>{if(started){ball.position.set(0,.42,0);bvx=0;bvz=0;players.forEach(p=>{p.g.position.copy(p.home);p.vx=0;p.vz=0})}},650);setTimeout(()=>{if(goalFlash<=0)toastEl.textContent=''},2000)}
+const strength=8+power*23;possessor=null;bvx=goalX/len*strength+(Math.random()-.5)*power*2.2;bvz=goalZ/len*strength;ball.position.y=.5+power*1.4;statusEl.textContent=power>.65?'Sút căng!':'Sút bóng!'}
+function passBall(){const p=controlled;if(Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z)>2.8){statusEl.textContent='Hãy áp sát bóng để chuyền';return}const mates=players.filter(q=>q.team===p.team&&!q.keeper&&q!==p).sort((a,b)=>dist2(a.g.position,ball.position)-dist2(b.g.position,ball.position));let m=mates.find(q=>p.team==='blue'?q.g.position.z<p.g.position.z:q.g.position.z>p.g.position.z)||mates[0];const dx=m.g.position.x-ball.position.x,dz=m.g.position.z-ball.position.z,len=Math.hypot(dx,dz)||1;possessor=null;bvx=dx/len*13;bvz=dz/len*13;ball.position.y=.5;statusEl.textContent='Chuyền cho đồng đội'}
+function goalScored(team){possessor=null;if(team==='blue')blueScore++;else redScore++;scoreEl.textContent=blueScore+' - '+redScore;toastEl.textContent=team==='blue'?'VÀOOOO! BLUE GHI BÀN':'RED GHI BÀN!';goalFlash=2.2;statusEl.textContent='Bàn thắng! Trận đấu tiếp tục';setTimeout(()=>{if(started){ball.position.set(0,.42,0);bvx=0;bvz=0;possessor=null;players.forEach(p=>{p.g.position.copy(p.home);p.vx=0;p.vz=0})}},650);setTimeout(()=>{if(goalFlash<=0)toastEl.textContent=''},2000)}
 function moveToward(p,tx,tz,speed,dt){const dx=tx-p.g.position.x,dz=tz-p.g.position.z,d=Math.hypot(dx,dz);if(d>.2){p.vx+=(dx/d*speed-p.vx)*Math.min(1,dt*5);p.vz+=(dz/d*speed-p.vz)*Math.min(1,dt*5)}else{p.vx*=.8;p.vz*=.8}p.g.position.x+=p.vx*dt;p.g.position.z+=p.vz*dt;p.g.position.x=THREE.MathUtils.clamp(p.g.position.x,-limitX,limitX);p.g.position.z=THREE.MathUtils.clamp(p.g.position.z,-limitZ,limitZ);if(Math.hypot(p.vx,p.vz)>.4)p.g.rotation.y=Math.atan2(p.vx,p.vz)}
 function updatePlayers(dt){for(const p of players){const isHuman=p===controlled;let tx=p.home.x,tz=p.home.z,speed=7.2;
 if(isHuman){let ix=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0),iz=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0),l=Math.hypot(ix,iz)||1;const fast=keys.ShiftLeft||keys.ShiftRight?1.45:1;tx=p.g.position.x+ix/l*speed*fast*dt*3;tz=p.g.position.z+iz/l*speed*fast*dt*3;moveToward(p,tx,tz,speed*fast,dt);if(shooting)shotPower=Math.min(1,shotPower+dt*.72);continue}
@@ -76,11 +76,55 @@ else {tx=p.home.x+ball.position.x*.12;tz=p.home.z+ball.position.z*.1}
 moveToward(p,tx,tz,speed*(p.keeper?.85:1),dt);
 if(!p.keeper&&Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z)<1.2){const d=Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z)||1;bvx+=(ball.position.x-p.g.position.x)/d*2.5;bvz+=(ball.position.z-p.g.position.z)/d*2.5;if(p.team==='red'&&Math.random()<.012){const gx=-ball.position.x,gz=L/2-ball.position.z,len=Math.hypot(gx,gz)||1;bvx=gx/len*12;bvz=gz/len*12}}
 }}
-function updateBall(dt){ball.position.x+=bvx*dt;ball.position.z+=bvz*dt;bvx*=Math.pow(.985,dt*60);bvz*=Math.pow(.985,dt*60);if(ball.position.y>.42){ball.position.y-=dt*4.5;if(ball.position.y<.42)ball.position.y=.42}
-if(Math.abs(ball.position.x)>W/2-.5){ball.position.x=Math.sign(ball.position.x)*(W/2-.5);bvx*=-.65}
-if(Math.abs(ball.position.z)>L/2){if(Math.abs(ball.position.x)<4.1){goalScored(ball.position.z<0?'blue':'red')}else{ball.position.z=Math.sign(ball.position.z)*(L/2-.5);bvz*=-.65}}
-for(const p of players){const dx=ball.position.x-p.g.position.x,dz=ball.position.z-p.g.position.z,d=Math.hypot(dx,dz);if(d<.9&&ball.position.y<1.5){const nx=dx/(d||1),nz=dz/(d||1);ball.position.x=p.g.position.x+nx*.91;ball.position.z=p.g.position.z+nz*.91;const v=bvx*nx+bvz*nz;if(v<2){bvx+=nx*(2-v);bvz+=nz*(2-v)}if(p.keeper){bvx=nx*8+(Math.random()-.5)*3;bvz=nz*8}}}
-ball.rotation.x+=bvz*dt*1.5;ball.rotation.z-=bvx*dt*1.5}
+function updateBall(dt){
+  // Players can collect a nearby loose ball; possession keeps the ball close to the feet.
+  if(!possessor){
+    let nearest=null,nearDist=1.15;
+    for(const p of players){
+      const d=Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z);
+      if(d<nearDist && ball.position.y<1.35){nearest=p;nearDist=d}
+    }
+    if(nearest){possessor=nearest;bvx=0;bvz=0;statusEl.textContent=nearest===controlled?'Đã khống chế bóng — dùng WASD để dẫn bóng':(nearest.team==='blue'?'BLUE đang giữ bóng':'RED đang giữ bóng')}
+  }
+  if(possessor){
+    const p=possessor;
+    // Face the direction of movement; when stationary, face the attacking goal.
+    let dx=p.vx,dz=p.vz,len=Math.hypot(dx,dz);
+    if(len<.18){dx=0;dz=p.team==='blue'?-1:1;len=1}
+    dx/=len;dz/=len;
+    const lead=(Math.hypot(p.vx,p.vz)>.4)?1.02:.82;
+    ball.position.x=THREE.MathUtils.clamp(p.g.position.x+dx*lead,-W/2+.65,W/2-.65);
+    ball.position.z=THREE.MathUtils.clamp(p.g.position.z+dz*lead,-L/2+.65,L/2-.65);
+    ball.position.y=.42;
+    bvx=p.vx;bvz=p.vz;
+    // AI occasionally shoots when carrying the ball close to the opposing goal.
+    p.cool=Math.max(0,(p.cool||0)-dt);
+    const nearGoal=p.team==='blue'?ball.position.z < -L/2+15:ball.position.z > L/2-15;
+    if(p!==controlled && nearGoal && p.cool<=0 && Math.random()<dt*.75){
+      const gx=-ball.position.x,gz=p.team==='blue'?-L/2-ball.position.z:L/2-ball.position.z,gl=Math.hypot(gx,gz)||1;
+      possessor=null;bvx=gx/gl*15;bvz=gz/gl*15;ball.position.y=.65;p.cool=2.5;
+    }
+    return;
+  }
+  ball.position.x+=bvx*dt;ball.position.z+=bvz*dt;
+  bvx*=Math.pow(.985,dt*60);bvz*=Math.pow(.985,dt*60);
+  if(ball.position.y>.42){ball.position.y-=dt*4.5;if(ball.position.y<.42)ball.position.y=.42}
+  if(Math.abs(ball.position.x)>W/2-.5){ball.position.x=Math.sign(ball.position.x)*(W/2-.5);bvx*=-.65}
+  if(Math.abs(ball.position.z)>L/2){
+    if(Math.abs(ball.position.x)<4.1){goalScored(ball.position.z<0?'blue':'red')}
+    else{ball.position.z=Math.sign(ball.position.z)*(L/2-.5);bvz*=-.65}
+  }
+  // Body collisions deflect the loose ball, and a goalkeeper parries it away.
+  for(const p of players){
+    const dx=ball.position.x-p.g.position.x,dz=ball.position.z-p.g.position.z,d=Math.hypot(dx,dz);
+    if(d<.72 && ball.position.y<1.35){
+      const nx=dx/(d||1),nz=dz/(d||1),v=bvx*nx+bvz*nz;
+      if(v<0){bvx-=1.5*v*nx;bvz-=1.5*v*nz}
+      if(p.keeper){bvx=nx*8+(Math.random()-.5)*3;bvz=nz*8}
+    }
+  }
+  ball.rotation.x+=bvz*dt*1.5;ball.rotation.z-=bvx*dt*1.5
+}
 function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.04);last=now;if(started&&!paused){gameTime+=dt;if(shooting)shotPower=Math.min(1,shotPower+dt*.72);updatePlayers(dt);updateBall(dt);clockEl.textContent=String(Math.floor(gameTime/60)).padStart(2,'0')+':'+String(Math.floor(gameTime%60)).padStart(2,'0');if(goalFlash>0){goalFlash-=dt;if(goalFlash<=0)toastEl.textContent=''} }
 const target=controlled.g.position;const camTarget=new THREE.Vector3(target.x*.25,0,target.z*.35);const desired=new THREE.Vector3(target.x*.45,29,target.z+35);camera.position.lerp(desired,.035);camera.lookAt(camTarget.x,0,camTarget.z);posEl.textContent='BLUE '+controlled.num+(shooting?' · LỰC '+Math.round(shotPower*100)+'%':'');renderer.render(scene,camera)}
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});

@@ -16,10 +16,10 @@
 <div id="game"></div>
 <div id="hud">
  <div class="top"><div class="score"><small>FRIENDLY MATCH · 90:00</small><div class="teams"><b class="blue">BLUE</b><strong id="score">0 - 0</strong><b class="red">RED</b></div><small id="clock">00:00</small></div></div>
- <div class="bottom"><div class="panel"><b>ĐIỀU KHIỂN</b><br>W A S D · Di chuyển<br>SHIFT · Tăng tốc &nbsp; WASD + E · Chuyền có hướng<br>Giữ SPACE rồi thả · Sút<br>Q · Đổi cầu thủ &nbsp; ESC · Tạm dừng</div><div class="panel" style="text-align:right"><b id="pos">BLUE 10</b><br><span id="status">Sẵn sàng vào trận!</span><div class="hint">Prototype 3D · AI · thủ môn · va chạm</div></div></div>
+ <div class="bottom"><div class="panel"><b>ĐIỀU KHIỂN</b><br>W A S D · Di chuyển<br>SHIFT · Tăng tốc &nbsp; WASD + E · Chuyền có hướng<br>Giữ SPACE rồi thả · Sút<br>Q · Đổi cầu thủ &nbsp; F · Cướp bóng &nbsp; ESC · Tạm dừng</div><div class="panel" style="text-align:right"><b id="pos">BLUE 10</b><br><span id="status">Sẵn sàng vào trận!</span><div class="hint">Prototype 3D · AI · thủ môn · va chạm</div></div></div>
 </div>
 <div id="toast"></div>
-<div id="overlay"><div id="card"><h1>⚽ FOOTBALL GAME 3D</h1><p>Trận bóng 3D góc nhìn sân bóng. Điều khiển cầu thủ áo xanh, phối hợp với đồng đội và ghi bàn vào lưới đỏ.</p><div class="keys"><span><b>W A S D</b> — Di chuyển</span><span><b>SHIFT</b> — Chạy nhanh</span><span><b>SPACE</b> — Giữ lực sút</span><span><b>WASD + E</b> — Chuyền theo hướng</span><span><b>Q</b> — Đổi cầu thủ</span><span><b>ESC</b> — Tạm dừng</span></div><button id="start">BẮT ĐẦU TRẬN</button><p style="font-size:11px">Dùng máy tính và bàn phím để chơi tốt nhất. Cần kết nối Internet để tải thư viện 3D.</p></div></div>
+<div id="overlay"><div id="card"><h1>⚽ FOOTBALL GAME 3D</h1><p>Trận bóng 3D góc nhìn sân bóng. Điều khiển cầu thủ áo xanh, phối hợp với đồng đội và ghi bàn vào lưới đỏ.</p><div class="keys"><span><b>W A S D</b> — Di chuyển</span><span><b>SHIFT</b> — Chạy nhanh</span><span><b>SPACE</b> — Giữ lực sút</span><span><b>WASD + E</b> — Chuyền theo hướng</span><span><b>Q</b> — Đổi cầu thủ</span><span><b>F</b> — Cướp bóng</span><span><b>ESC</b> — Tạm dừng</span></div><button id="start">BẮT ĐẦU TRẬN</button><p style="font-size:11px">Dùng máy tính và bàn phím để chơi tốt nhất. Cần kết nối Internet để tải thư viện 3D.</p></div></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const mount=document.querySelector('#game'), scoreEl=document.querySelector('#score'),clockEl=document.querySelector('#clock'),statusEl=document.querySelector('#status'),posEl=document.querySelector('#pos'),toastEl=document.querySelector('#toast'),overlay=document.querySelector('#overlay');
@@ -54,9 +54,9 @@ const players=[];
 players.push(makePlayer('blue',10,0,12),makePlayer('blue',7,-10,7),makePlayer('blue',8,9,4),makePlayer('blue',5,-7,20),makePlayer('blue',4,7,22),makePlayer('blue',1,0,29,true));
 players.push(makePlayer('red',9,0,-12),makePlayer('red',11,-10,-7),makePlayer('red',8,9,-4),makePlayer('red',4,-7,-20),makePlayer('red',5,7,-22),makePlayer('red',1,0,-29,true));
 let controlled=players[0],started=false,paused=false,shotPower=0,shooting=false,gameTime=0,last=performance.now(),blueScore=0,redScore=0,goalFlash=0;
-const keys={};addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.code==='Space'&&started&&!paused)shooting=true;if(e.code==='KeyQ'&&started)changePlayer();if(e.code==='KeyE'&&started&&!paused)passBall();if(e.code==='Escape'&&started){paused=!paused;toastEl.textContent=paused?'TẠM DỪNG':'';if(paused)statusEl.textContent='Nhấn ESC để tiếp tục';else statusEl.textContent='Trận đấu đang diễn ra'}});addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='Space'&&shooting){shooting=false;kick(shotPower);shotPower=0}});
-document.querySelector('#start').onclick=()=>{started=true;overlay.style.display='none';last=performance.now();toastEl.textContent='BẮT ĐẦU!';setTimeout(()=>toastEl.textContent='',1100)};
-function changePlayer(){const team=players.filter(p=>p.team==='blue'&&!p.keeper);controlled=team.reduce((a,b)=>dist2(b.g.position,ball.position)<dist2(a.g.position,ball.position)?b:a);statusEl.textContent='Đang điều khiển số '+controlled.num}
+const keys={};addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.code==='Space'&&started&&!paused)shooting=true;if(e.code==='KeyQ'&&started)changePlayer();if(e.code==='KeyE'&&started&&!paused)passBall();if(e.code==='KeyF'&&started&&!paused)tackleBall();if(e.code==='Escape'&&started){paused=!paused;toastEl.textContent=paused?'TẠM DỪNG':'';if(paused)statusEl.textContent='Nhấn ESC để tiếp tục';else statusEl.textContent='Trận đấu đang diễn ra'}});addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='Space'&&shooting){shooting=false;kick(shotPower);shotPower=0}});
+document.querySelector('#start').onclick=()=>{started=true;overlay.style.display='none';possessor=controlled;ball.position.set(controlled.g.position.x,.42,controlled.g.position.z-0.9);bvx=0;bvz=0;last=performance.now();toastEl.textContent='BẮT ĐẦU! BẠN ĐANG CÓ BÓNG';statusEl.textContent='WASD dẫn bóng · E chuyền · F cướp bóng';setTimeout(()=>toastEl.textContent='',1400)};
+function changePlayer(){const team=players.filter(p=>p.team==='blue'&&!p.keeper);controlled=team.reduce((a,b)=>dist2(b.g.position,ball.position)<dist2(a.g.position,ball.position)?b:a);statusEl.textContent='Đang điều khiển số '+controlled.num;posEl.textContent='BLUE '+controlled.num}\nfunction tackleBall(){\n  const p=controlled;\n  if(possessor===p){statusEl.textContent='Bạn đang giữ bóng — dùng E để chuyền hoặc SPACE để sút';return}\n  const d=Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z);\n  if(possessor&&possessor.team!=='blue'&&Math.hypot(possessor.g.position.x-p.g.position.x,possessor.g.position.z-p.g.position.z)<3.0){possessor=p;bvx=0;bvz=0;statusEl.textContent='CƯỚP ĐƯỢC BÓNG!';return}\n  if(!possessor&&d<2.5&&ball.position.y<1.8){possessor=p;bvx=0;bvz=0;statusEl.textContent='ĐÃ GIÀNH ĐƯỢC BÓNG!';return}\n  statusEl.textContent='Áp sát đối phương hoặc bóng rồi nhấn F';\n}
 function dist2(a,b){return (a.x-b.x)**2+(a.z-b.z)**2}
 let bvx=0,bvz=0,possessor=null;
 function kick(power){const p=controlled,dx=ball.position.x-p.g.position.x,dz=ball.position.z-p.g.position.z;if(Math.hypot(dx,dz)>2.7){statusEl.textContent='Hãy áp sát bóng để sút';return}
@@ -65,7 +65,7 @@ const goalX=targetX-p.g.position.x,goalZ=targetZ-p.g.position.z,len=Math.hypot(g
 const strength=8+power*23;possessor=null;bvx=goalX/len*strength+(Math.random()-.5)*power*2.2;bvz=goalZ/len*strength;ball.position.y=.5+power*1.4;statusEl.textContent=power>.65?'Sút căng!':'Sút bóng!'}
 function passBall(){
   const p=controlled;
-  if(possessor!==p && Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z)>2.8){statusEl.textContent='Hãy áp sát bóng để chuyền';return}
+  if(possessor!==p && Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z)>4.2){statusEl.textContent='Áp sát bóng hơn rồi nhấn E để chuyền';return}\n  if(possessor&&possessor.team!=='blue'&&Math.hypot(possessor.g.position.x-p.g.position.x,possessor.g.position.z-p.g.position.z)<3.0)possessor=p;
   const mates=players.filter(q=>q.team===p.team&&!q.keeper&&q!==p);
   // Aim using WASD / arrow keys at the moment E is pressed.
   let ax=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
@@ -234,7 +234,7 @@ function updatePlayers(dt){
 function updateBall(dt){
   // Players can collect a nearby loose ball; possession keeps the ball close to the feet.
   if(!possessor){
-    let nearest=null,nearDist=1.15;
+    let nearest=null,nearDist=1.75;
     for(const p of players){
       const d=Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z);
       if(d<nearDist && ball.position.y<1.35){nearest=p;nearDist=d}
@@ -244,7 +244,7 @@ function updateBall(dt){
   if(possessor){
     let p=possessor;
     // Nearby opponents can challenge for possession; controlled player has a stronger tackle chance.
-    const challengers=players.filter(q=>q.team!==p.team && Math.hypot(q.g.position.x-p.g.position.x,q.g.position.z-p.g.position.z)<.95);
+    const challengers=players.filter(q=>q.team!==p.team && Math.hypot(q.g.position.x-p.g.position.x,q.g.position.z-p.g.position.z)<1.25);
     if(challengers.length && Math.random()<dt*2.2){
       const tackler=challengers.find(q=>q===controlled)||challengers[0];
       possessor=tackler;p=tackler;bvx=0;bvz=0;

@@ -87,7 +87,14 @@ function updateBall(dt){
     if(nearest){possessor=nearest;bvx=0;bvz=0;statusEl.textContent=nearest===controlled?'Đã khống chế bóng — dùng WASD để dẫn bóng':(nearest.team==='blue'?'BLUE đang giữ bóng':'RED đang giữ bóng')}
   }
   if(possessor){
-    const p=possessor;
+    let p=possessor;
+    // Nearby opponents can challenge for possession; controlled player has a stronger tackle chance.
+    const challengers=players.filter(q=>q.team!==p.team && Math.hypot(q.g.position.x-p.g.position.x,q.g.position.z-p.g.position.z)<.95);
+    if(challengers.length && Math.random()<dt*2.2){
+      const tackler=challengers.find(q=>q===controlled)||challengers[0];
+      possessor=tackler;p=tackler;bvx=0;bvz=0;
+      statusEl.textContent=p===controlled?'Cướp được bóng!':'Đối phương cướp bóng!';
+    }
     // Face the direction of movement; when stationary, face the attacking goal.
     let dx=p.vx,dz=p.vz,len=Math.hypot(dx,dz);
     if(len<.18){dx=0;dz=p.team==='blue'?-1:1;len=1}

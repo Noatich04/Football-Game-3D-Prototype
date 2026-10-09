@@ -14,7 +14,7 @@ Thư viện Three.js được tải từ CDN nên cần Internet.
 - **W A S D** hoặc phím mũi tên: di chuyển
 - **Shift**: chạy nhanh
 - **Giữ Space rồi thả**: lấy lực và sút
-- **E**: chuyền bóng
+- **W A S D + E**: chuyền theo hướng đang chọn; nếu không giữ hướng, chuyền theo hướng cầu thủ đang quay mặt
 - **Q**: đổi sang cầu thủ xanh gần bóng
 - **Esc**: tạm dừng / tiếp tục
 

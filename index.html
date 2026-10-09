@@ -16,10 +16,10 @@
 <div id="game"></div>
 <div id="hud">
  <div class="top"><div class="score"><small>FRIENDLY MATCH · 90:00</small><div class="teams"><b class="blue">BLUE</b><strong id="score">0 - 0</strong><b class="red">RED</b></div><small id="clock">00:00</small></div></div>
- <div class="bottom"><div class="panel"><b>ĐIỀU KHIỂN</b><br>W A S D · Di chuyển<br>SHIFT · Tăng tốc &nbsp; E · Chuyền<br>Giữ SPACE rồi thả · Sút<br>Q · Đổi cầu thủ &nbsp; ESC · Tạm dừng</div><div class="panel" style="text-align:right"><b id="pos">BLUE 10</b><br><span id="status">Sẵn sàng vào trận!</span><div class="hint">Prototype 3D · AI · thủ môn · va chạm</div></div></div>
+ <div class="bottom"><div class="panel"><b>ĐIỀU KHIỂN</b><br>W A S D · Di chuyển<br>SHIFT · Tăng tốc &nbsp; WASD + E · Chuyền có hướng<br>Giữ SPACE rồi thả · Sút<br>Q · Đổi cầu thủ &nbsp; ESC · Tạm dừng</div><div class="panel" style="text-align:right"><b id="pos">BLUE 10</b><br><span id="status">Sẵn sàng vào trận!</span><div class="hint">Prototype 3D · AI · thủ môn · va chạm</div></div></div>
 </div>
 <div id="toast"></div>
-<div id="overlay"><div id="card"><h1>⚽ FOOTBALL GAME 3D</h1><p>Trận bóng 3D góc nhìn sân bóng. Điều khiển cầu thủ áo xanh, phối hợp với đồng đội và ghi bàn vào lưới đỏ.</p><div class="keys"><span><b>W A S D</b> — Di chuyển</span><span><b>SHIFT</b> — Chạy nhanh</span><span><b>SPACE</b> — Giữ lực sút</span><span><b>E</b> — Chuyền bóng</span><span><b>Q</b> — Đổi cầu thủ</span><span><b>ESC</b> — Tạm dừng</span></div><button id="start">BẮT ĐẦU TRẬN</button><p style="font-size:11px">Dùng máy tính và bàn phím để chơi tốt nhất. Cần kết nối Internet để tải thư viện 3D.</p></div></div>
+<div id="overlay"><div id="card"><h1>⚽ FOOTBALL GAME 3D</h1><p>Trận bóng 3D góc nhìn sân bóng. Điều khiển cầu thủ áo xanh, phối hợp với đồng đội và ghi bàn vào lưới đỏ.</p><div class="keys"><span><b>W A S D</b> — Di chuyển</span><span><b>SHIFT</b> — Chạy nhanh</span><span><b>SPACE</b> — Giữ lực sút</span><span><b>WASD + E</b> — Chuyền theo hướng</span><span><b>Q</b> — Đổi cầu thủ</span><span><b>ESC</b> — Tạm dừng</span></div><button id="start">BẮT ĐẦU TRẬN</button><p style="font-size:11px">Dùng máy tính và bàn phím để chơi tốt nhất. Cần kết nối Internet để tải thư viện 3D.</p></div></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const mount=document.querySelector('#game'), scoreEl=document.querySelector('#score'),clockEl=document.querySelector('#clock'),statusEl=document.querySelector('#status'),posEl=document.querySelector('#pos'),toastEl=document.querySelector('#toast'),overlay=document.querySelector('#overlay');
@@ -63,7 +63,42 @@ function kick(power){const p=controlled,dx=ball.position.x-p.g.position.x,dz=bal
 let targetX=0,targetZ=p.team==='blue'?-L/2:L/2;
 const goalX=targetX-p.g.position.x,goalZ=targetZ-p.g.position.z,len=Math.hypot(goalX,goalZ)||1;
 const strength=8+power*23;possessor=null;bvx=goalX/len*strength+(Math.random()-.5)*power*2.2;bvz=goalZ/len*strength;ball.position.y=.5+power*1.4;statusEl.textContent=power>.65?'Sút căng!':'Sút bóng!'}
-function passBall(){const p=controlled;if(Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z)>2.8){statusEl.textContent='Hãy áp sát bóng để chuyền';return}const mates=players.filter(q=>q.team===p.team&&!q.keeper&&q!==p).sort((a,b)=>dist2(a.g.position,ball.position)-dist2(b.g.position,ball.position));let m=mates.find(q=>p.team==='blue'?q.g.position.z<p.g.position.z:q.g.position.z>p.g.position.z)||mates[0];const dx=m.g.position.x-ball.position.x,dz=m.g.position.z-ball.position.z,len=Math.hypot(dx,dz)||1;possessor=null;bvx=dx/len*13;bvz=dz/len*13;ball.position.y=.5;statusEl.textContent='Chuyền cho đồng đội'}
+function passBall(){
+  const p=controlled;
+  if(possessor!==p && Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z)>2.8){statusEl.textContent='Hãy áp sát bóng để chuyền';return}
+  const mates=players.filter(q=>q.team===p.team&&!q.keeper&&q!==p);
+  // Aim using WASD / arrow keys at the moment E is pressed.
+  let ax=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
+  let az=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0);
+  let al=Math.hypot(ax,az);
+  if(al<.1){
+    // No direction key: use the player's facing direction, with forward attack as fallback.
+    ax=Math.sin(p.g.rotation.y);az=Math.cos(p.g.rotation.y);al=Math.hypot(ax,az);
+    if(al<.1){ax=0;az=p.team==='blue'?-1:1;al=1}
+  }
+  ax/=al;az/=al;
+  // Prefer a teammate in the chosen direction; if none is in the lane, pass into space that way.
+  let receiver=null,best=-Infinity;
+  for(const q of mates){
+    const dx=q.g.position.x-ball.position.x,dz=q.g.position.z-ball.position.z,d=Math.hypot(dx,dz)||1;
+    const dot=(dx/d)*ax+(dz/d)*az;
+    const score=dot*2.2-d*.018;
+    if(dot>.35&&score>best){best=score;receiver=q}
+  }
+  let tx, tz, power=13;
+  if(receiver){
+    // Lead the pass slightly so the receiver can run onto it.
+    tx=receiver.g.position.x+receiver.vx*.22-ball.position.x;
+    tz=receiver.g.position.z+receiver.vz*.22-ball.position.z;
+    statusEl.textContent='Chuyền hướng cầu thủ số '+receiver.num;
+  }else{
+    tx=ax*15;tz=az*15;
+    power=12;
+    statusEl.textContent='Chuyền vào khoảng trống theo hướng chọn';
+  }
+  const len=Math.hypot(tx,tz)||1;
+  possessor=null;bvx=tx/len*power;bvz=tz/len*power;ball.position.y=.48;
+}
 function goalScored(team){possessor=null;if(team==='blue')blueScore++;else redScore++;scoreEl.textContent=blueScore+' - '+redScore;toastEl.textContent=team==='blue'?'VÀOOOO! BLUE GHI BÀN':'RED GHI BÀN!';goalFlash=2.2;statusEl.textContent='Bàn thắng! Trận đấu tiếp tục';setTimeout(()=>{if(started){ball.position.set(0,.42,0);bvx=0;bvz=0;possessor=null;players.forEach(p=>{p.g.position.copy(p.home);p.vx=0;p.vz=0})}},650);setTimeout(()=>{if(goalFlash<=0)toastEl.textContent=''},2000)}
 function moveToward(p,tx,tz,speed,dt){const dx=tx-p.g.position.x,dz=tz-p.g.position.z,d=Math.hypot(dx,dz);if(d>.2){p.vx+=(dx/d*speed-p.vx)*Math.min(1,dt*5);p.vz+=(dz/d*speed-p.vz)*Math.min(1,dt*5)}else{p.vx*=.8;p.vz*=.8}p.g.position.x+=p.vx*dt;p.g.position.z+=p.vz*dt;p.g.position.x=THREE.MathUtils.clamp(p.g.position.x,-limitX,limitX);p.g.position.z=THREE.MathUtils.clamp(p.g.position.z,-limitZ,limitZ);if(Math.hypot(p.vx,p.vz)>.4)p.g.rotation.y=Math.atan2(p.vx,p.vz)}
 function updatePlayers(dt){

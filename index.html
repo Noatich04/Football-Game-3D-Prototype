@@ -56,7 +56,15 @@ players.push(makePlayer('red',9,0,-12),makePlayer('red',11,-10,-7),makePlayer('r
 let controlled=players[0],started=false,paused=false,shotPower=0,shooting=false,gameTime=0,last=performance.now(),blueScore=0,redScore=0,goalFlash=0;
 const keys={};addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.code==='Space'&&started&&!paused)shooting=true;if(e.code==='KeyQ'&&started)changePlayer();if(e.code==='KeyE'&&started&&!paused)passBall();if(e.code==='KeyF'&&started&&!paused)tackleBall();if(e.code==='Escape'&&started){paused=!paused;toastEl.textContent=paused?'TẠM DỪNG':'';if(paused)statusEl.textContent='Nhấn ESC để tiếp tục';else statusEl.textContent='Trận đấu đang diễn ra'}});addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='Space'&&shooting){shooting=false;kick(shotPower);shotPower=0}});
 document.querySelector('#start').onclick=()=>{started=true;overlay.style.display='none';possessor=controlled;ball.position.set(controlled.g.position.x,.42,controlled.g.position.z-0.9);bvx=0;bvz=0;last=performance.now();toastEl.textContent='BẮT ĐẦU! BẠN ĐANG CÓ BÓNG';statusEl.textContent='WASD dẫn bóng · E chuyền · F cướp bóng';setTimeout(()=>toastEl.textContent='',1400)};
-function changePlayer(){const team=players.filter(p=>p.team==='blue'&&!p.keeper);controlled=team.reduce((a,b)=>dist2(b.g.position,ball.position)<dist2(a.g.position,ball.position)?b:a);statusEl.textContent='Đang điều khiển số '+controlled.num;posEl.textContent='BLUE '+controlled.num}\nfunction tackleBall(){\n  const p=controlled;\n  if(possessor===p){statusEl.textContent='Bạn đang giữ bóng — dùng E để chuyền hoặc SPACE để sút';return}\n  const d=Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z);\n  if(possessor&&possessor.team!=='blue'&&Math.hypot(possessor.g.position.x-p.g.position.x,possessor.g.position.z-p.g.position.z)<3.0){possessor=p;bvx=0;bvz=0;statusEl.textContent='CƯỚP ĐƯỢC BÓNG!';return}\n  if(!possessor&&d<2.5&&ball.position.y<1.8){possessor=p;bvx=0;bvz=0;statusEl.textContent='ĐÃ GIÀNH ĐƯỢC BÓNG!';return}\n  statusEl.textContent='Áp sát đối phương hoặc bóng rồi nhấn F';\n}
+function changePlayer(){const team=players.filter(p=>p.team==='blue'&&!p.keeper);controlled=team.reduce((a,b)=>dist2(b.g.position,ball.position)<dist2(a.g.position,ball.position)?b:a);statusEl.textContent='Đang điều khiển số '+controlled.num;posEl.textContent='BLUE '+controlled.num}
+function tackleBall(){
+  const p=controlled;
+  if(possessor===p){statusEl.textContent='Bạn đang giữ bóng — dùng E để chuyền hoặc SPACE để sút';return}
+  const d=Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z);
+  if(possessor&&possessor.team!=='blue'&&Math.hypot(possessor.g.position.x-p.g.position.x,possessor.g.position.z-p.g.position.z)<3.0){possessor=p;bvx=0;bvz=0;statusEl.textContent='CƯỚP ĐƯỢC BÓNG!';return}
+  if(!possessor&&d<2.5&&ball.position.y<1.8){possessor=p;bvx=0;bvz=0;statusEl.textContent='ĐÃ GIÀNH ĐƯỢC BÓNG!';return}
+  statusEl.textContent='Áp sát đối phương hoặc bóng rồi nhấn F';
+}
 function dist2(a,b){return (a.x-b.x)**2+(a.z-b.z)**2}
 let bvx=0,bvz=0,possessor=null;
 function kick(power){const p=controlled,dx=ball.position.x-p.g.position.x,dz=ball.position.z-p.g.position.z;if(Math.hypot(dx,dz)>2.7){statusEl.textContent='Hãy áp sát bóng để sút';return}
@@ -65,7 +73,8 @@ const goalX=targetX-p.g.position.x,goalZ=targetZ-p.g.position.z,len=Math.hypot(g
 const strength=8+power*23;possessor=null;bvx=goalX/len*strength+(Math.random()-.5)*power*2.2;bvz=goalZ/len*strength;ball.position.y=.5+power*1.4;statusEl.textContent=power>.65?'Sút căng!':'Sút bóng!'}
 function passBall(){
   const p=controlled;
-  if(possessor!==p && Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z)>4.2){statusEl.textContent='Áp sát bóng hơn rồi nhấn E để chuyền';return}\n  if(possessor&&possessor.team!=='blue'&&Math.hypot(possessor.g.position.x-p.g.position.x,possessor.g.position.z-p.g.position.z)<3.0)possessor=p;
+  if(possessor!==p && Math.hypot(ball.position.x-p.g.position.x,ball.position.z-p.g.position.z)>4.2){statusEl.textContent='Áp sát bóng hơn rồi nhấn E để chuyền';return}
+  if(possessor&&possessor.team!=='blue'&&Math.hypot(possessor.g.position.x-p.g.position.x,possessor.g.position.z-p.g.position.z)<3.0)possessor=p;
   const mates=players.filter(q=>q.team===p.team&&!q.keeper&&q!==p);
   // Aim using WASD / arrow keys at the moment E is pressed.
   let ax=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
@@ -134,7 +143,9 @@ function updatePlayers(dt){
     if(p.keeper){
       // Goalkeeper tracks the ball laterally but stays near the goal line.
       const goalZ=p.team==='blue'?L/2-2.2:-L/2+2.2;
-      tx=THREE.MathUtils.clamp(ball.position.x*.72,-3.4,3.4);
+      // Stay centered until the ball enters the defensive third; then track it.
+      const ballThreat=p.team==='blue'?ball.position.z>goalZ-11:ball.position.z<goalZ+11;
+      tx=ballThreat?THREE.MathUtils.clamp(ball.position.x*.72,-3.4,3.4):p.home.x;
       tz=goalZ;
       if(Math.abs(ball.position.z-goalZ)<8){
         tx=THREE.MathUtils.clamp(ball.position.x,-3.7,3.7);

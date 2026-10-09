@@ -20,6 +20,9 @@ Thư viện Three.js được tải từ CDN nên cần Internet.
 
 ## Có trong prototype
 - Sân bóng 3D, đường biên, vòng tròn giữa sân và hai khung thành
+- Cơ chế khống chế và dẫn bóng theo cầu thủ đang giữ bóng
+- AI biết chạy chỗ hỗ trợ, chuyền bóng khi bị áp sát, dâng lên tấn công và lùi về phòng thủ
+- Cầu thủ phòng ngự gây áp lực lên người giữ bóng; đồng đội còn lại giữ vị trí
 - Hai đội cầu thủ, AI di chuyển và tranh bóng
 - Thủ môn cơ bản, va chạm cầu thủ-bóng
 - Sút, chuyền, bảng tỷ số và đồng hồ trận đấu
